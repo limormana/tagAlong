@@ -14,8 +14,9 @@
 
 ZumoMotors motors;
 Pushbutton button(ZUMO_BUTTON); // pushbutton on pin 12
-
-unsigned long startTime = millis();
+// lowest and highest sensor readings:
+const int sensorMin = 0;     // sensor minimum
+const int sensorMax = 1024;  // sensor maximum
 
 void setup() {
   // put your setup code here, to run once:
@@ -24,13 +25,21 @@ void setup() {
   digitalWrite(LED, HIGH);
   button.waitForButton();
   digitalWrite(LED, LOW);
-}
+
+   // initialize serial communication @ 9600 baud:
+  Serial.begin(9600);
+ }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+  // read the sensor on analog A0:
+  int sensorReading = analogRead(A1);
+  // map the sensor range (four options):
+  // ex: 'long int map(long int, long int, long int, long int, long int)'
+  int range = map(sensorReading, sensorMin, sensorMax, 0, 3);
   int rand;
   
-  if(millis() - startTime > 2000)   // go forward for 2 sec
+  // put your main code here, to run repeatedly:  
+  if(range == 1 || range == 0)   // go forward for 2 sec
   {
     rand = random(1,3);
     if (rand == 1) //turn right
@@ -42,10 +51,8 @@ void loop() {
     else
     {
        motors.setSpeeds(-TURN_SPEED, TURN_SPEED);
-      delay(TURN_DURATION);
-      motors.setSpeeds(FORWARD_SPEED, FORWARD_SPEED);
+       delay(TURN_DURATION);
+       motors.setSpeeds(FORWARD_SPEED, FORWARD_SPEED);
     }
-
-    startTime = millis();
   }
 }
