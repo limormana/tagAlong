@@ -1,41 +1,3 @@
-/*
-  Getting distance from the RFD77402 Time of Flight Sensor
-  By: Nathan Seidle
-  SparkFun Electronics
-  Date: June 6th, 2017
-  License: This code is public domain but you buy me a beer if you use this and we meet someday (Beerware license).
-
-  Feel like supporting our work? Buy a board from SparkFun!
-
-  Read the raw distance values from the vertical-cavity surface-emitting laser (VCSEL) sensor.
-
-  Hardware Connections:
-  Attach the Qwiic Shield to your Arduino/Photon/ESP32 or other
-  Plug the sensor onto the shield (any port)
-  Open the serial monitor at 9600 baud
-
-  Available:
-  takeMeasurement() - Initiates measurement. Read via getDistance(), etc
-
-  getDistance() - Returns the last measurement value
-  getValidPixels() - Returns number of valid pixels
-  getConfidenceValue() - A qualitative value of the distance measurement
-
-  getPeak/setPeak(byte) - Gets/sets the vertical-cavity surface-emitting laser (VCSEL) peak
-  getThreshold/setThreshold(byte) - Gets/sets the VCSEL threshold
-  getFrequency/setFrequency(byte) - Gets/sets the modulation frequency
-
-  goToOffMode() - Turn off MCPU
-  goToOnMode() - Wake MCPU to ON Mode
-  goToStandbyMode() - Low power standby mode
-  getMeasurement() - Once sensor is configured, issue this command to take measurement
-
-  getCalibrationData() - reads 27 messages of MPU mailbox data and loads calibration data array
-  getMailbox() - returns the 16-bits in the MPU mailbox
-
-  reset() - Resets IC to initial POR settings
-
-*/
 #include <ZumoBuzzer.h>
 #include <ZumoMotors.h>
 #include <Pushbutton.h>
@@ -57,10 +19,23 @@ Pushbutton button(ZUMO_BUTTON); // pushbutton on pin 12
 // lowest and highest sensor readings:
 const int sensorMin = 0;     // sensor minimum
 const int sensorMax = 1024;  // sensor maximum
+const int distanceTH = 200;  //TH value for ditacting an obstcale
 unsigned long startTime = millis();
 int stage = 1; // 1- Obstcale avoidance 2- Wait for chair
+
+/// Led /////
+const int ledPin =  4;// the number of the LED pin
+int ledState = LOW;             // ledState used to set the LED
+unsigned long previousMillis = millis();        // will store last time LED was updated
+
+// constants won't change:
+const long interval = 1000;           // interval at which to blink (milliseconds)
+
 void setup()
 {
+    // Set the digital pin as output.
+    pinMode(ledPin, OUTPUT);
+  
     button.waitForButton();
     // initialize serial communication @ 9600 baud:
     Serial.begin(9600);
@@ -74,6 +49,7 @@ void setup()
         while (1) ; //Freeze!
     }
     Serial.println("Sensor online!");
+    motors.setSpeeds(FORWARD_SPEED, FORWARD_SPEED);
 }
 
 void loop()
@@ -81,6 +57,29 @@ void loop()
     // Obstcale Avoidance Mode
     if (stage == 1)
     {
+        // Led blinks
+        // check to see if it's time to blink the LED; that is, if the difference
+        // between the current time and last time you blinked the LED is bigger than
+        // the interval at which you want to blink the LED.
+        unsigned long currentMillis = millis();
+      
+        if (currentMillis - previousMillis >= interval) 
+        {
+            // save the last time you blinked the LED
+            previousMillis = millis();
+        
+            // if the LED is off turn it on and vice-versa:
+            if (ledState == LOW) {
+              ledState = HIGH;
+            } else {
+              ledState = LOW;
+            }
+        
+            // set the LED with the ledState of the variable:
+            digitalWrite(ledPin, ledState);
+          }
+        ///// Led Logic END///////////
+               
         ///// Obstacles Logic ///////
         byte errorCode = myDistance.takeMeasurement();
         if (errorCode == CODE_VALID_DATA)
@@ -98,9 +97,8 @@ void loop()
             Serial.print(confidence);
 
             // Identified an obstcale
-            if (distance < 200)
+            if (distance < distanceTH)
             {
-                // put your main code here, to run repeatedly:  
                 rand = random(1, 3);
                 if (rand == 1) //turn right
                 {
@@ -153,12 +151,12 @@ void loop()
     // Wait for wheelchair Mode
     else
     {
+        // Constant Led Light
         int sensorReading = analogRead(A1);
         // map the sensor range (four options):
-        // ex: 'long int map(long int, long int, long int, long int, long int)'
         int range = map(sensorReading, sensorMin, sensorMax, 0, 3);
-        // if infra, turn around itself
-        if (range == 1 || range == 0)   // go forward for 2 sec
+        // if gets infra from chair, start moving forward
+        if (range == 1 || range == 0)   
         {
             motors.setSpeeds(FORWARD_SPEED, FORWARD_SPEED);
             stage = 1;
