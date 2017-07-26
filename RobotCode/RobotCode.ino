@@ -178,7 +178,7 @@ void loop()
           Serial.println("Message: " + message);
           //Serial.print("Distance: ");
           //erial.println(distance);
-          if(strlen(message.c_str()) > 0 && distance > -40)
+          if(strlen(message.c_str()) > 0 && distance > -50)
           {
             motors.setSpeeds(FORWARD_SPEED, FORWARD_SPEED);
             stage = 1;
