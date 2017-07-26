@@ -152,15 +152,6 @@ void loop()
     else
     {
         // Constant Led Light
-        int sensorReading = analogRead(A1);
-        // map the sensor range (four options):
-        int range = map(sensorReading, sensorMin, sensorMax, 0, 3);
-        // if gets infra from chair, start moving forward
-        if (range == 1 || range == 0)   
-        {
-            motors.setSpeeds(FORWARD_SPEED, FORWARD_SPEED);
-            stage = 1;
-            startTime = millis();
-        }
+        digitalWrite(ledPin, HIGH);
     }
 }
