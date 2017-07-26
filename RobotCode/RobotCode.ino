@@ -7,8 +7,8 @@
 RFD77402 myDistance; //Hook object to the library
 
 #define REVERSE_SPEED     100 // 0 is stopped, 400 is full speed
-#define TURN_SPEED        200
-#define FORWARD_SPEED     300
+#define TURN_SPEED        150
+#define FORWARD_SPEED     250
 #define REVERSE_DURATION  200 // ms
 #define TURN_DURATION     300 // ms
 #define RUNNING_DURATION  10000 // ms
