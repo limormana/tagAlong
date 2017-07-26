@@ -38,17 +38,17 @@ void setup()
   
     button.waitForButton();
     // initialize serial communication @ 9600 baud:
-    Serial.begin(9600);
+    Serial.begin(115200);
 
-    while (!Serial) ;
-    Serial.println("RFD77402 Read Example");
+    //while (!Serial) ;
+    //Serial.println("RFD77402 Read Example");
 
     if (myDistance.begin() == false)
     {
-        Serial.println("Sensor failed to initialize. Check wiring.");
+      //  Serial.println("Sensor failed to initialize. Check wiring.");
         while (1) ; //Freeze!
     }
-    Serial.println("Sensor online!");
+    //Serial.println("Sensor online!");
     motors.setSpeeds(FORWARD_SPEED, FORWARD_SPEED);
 }
 
@@ -89,13 +89,13 @@ void loop()
             unsigned int confidence = myDistance.getConfidenceValue();
             int rand;
 
-            Serial.print("distance: ");
+        /*    Serial.print("distance: ");
             Serial.print(distance);
             Serial.print("mm pixels: ");
             Serial.print(pixels);
             Serial.print(" confidence: ");
             Serial.print(confidence);
-
+*/
             // Identified an obstcale
             if (distance < distanceTH)
             {
@@ -115,7 +115,7 @@ void loop()
             }
 
         }
-        else if (errorCode == CODE_FAILED_PIXELS)
+  /*      else if (errorCode == CODE_FAILED_PIXELS)
         {
             Serial.print("Not enough pixels valid");
         }
@@ -137,7 +137,7 @@ void loop()
         }
 
         Serial.println();
-
+*/
         ///// Obstacles Logic END///////
 
         if (millis() - startTime > RUNNING_DURATION)
@@ -153,5 +153,39 @@ void loop()
     {
         // Constant Led Light
         digitalWrite(ledPin, HIGH);
+        
+        while(Serial.available()) {
+          char t = Serial.read();
+        }
+        delay(10);
+        
+        if(Serial.available())
+        {
+          String message = Serial.readStringUntil('\r\n');
+          //Serial.println(message);
+          if (message.indexOf('-') != message.lastIndexOf('-'))
+            message = message.substring(0, message.lastIndexOf('-'));
+          /*
+          char message[20] = {0};
+          int i =0, j = 0;
+          while(Serial.available())
+          {
+              message[i++] = Serial.read();  
+          } 
+          Serial.flush();*/
+
+          int distance = atoi(message.c_str());
+          Serial.println("Message: " + message);
+          //Serial.print("Distance: ");
+          //erial.println(distance);
+          if(strlen(message.c_str()) > 0 && distance > -40)
+          {
+            motors.setSpeeds(FORWARD_SPEED, FORWARD_SPEED);
+            stage = 1;
+            startTime = millis();
+          }
+        }
     }
+
+    
 }
